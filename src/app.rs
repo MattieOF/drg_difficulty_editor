@@ -11,6 +11,8 @@ pub struct DifficultyEditorApp {
     new_difficulty_base: String,
     #[serde(skip)]
     dark_mode_enabled: bool,
+    #[serde(skip)]
+    project_open: bool,
 }
 
 impl Default for DifficultyEditorApp {
@@ -19,6 +21,7 @@ impl Default for DifficultyEditorApp {
             new_difficulty_name: "New Difficulty".to_owned(),
             new_difficulty_base: "Haz5".to_owned(),
             dark_mode_enabled: true,
+            project_open: false,
         }
     }
 }
@@ -39,6 +42,10 @@ impl DifficultyEditorApp {
         }
 
         Default::default()
+    }
+
+    fn reset_new_difficulty_modal(&mut self) {
+        self.new_difficulty_name = "New Difficulty".to_owned();
     }
 }
 
@@ -160,7 +167,7 @@ impl eframe::App for DifficultyEditorApp {
                 ui.menu_button("File", |ui| {
                     if ui.button("New Difficulty").clicked() {
                         ui.close_menu();
-                        self.new_difficulty_name = "New Difficulty".to_owned();
+                        self.reset_new_difficulty_modal();
                         new_difficulty_modal.open();
                     }
 
@@ -203,7 +210,28 @@ impl eframe::App for DifficultyEditorApp {
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("DRG Difficulty Editor");
+            if (!self.project_open) {
+                ui.vertical_centered(|ui| {
+                    ui.add_space(ui.available_height() * 0.45);
+                    ui.label(
+                        egui::RichText::new("DRG Difficulty Editor")
+                            .size(40.0)
+                            .strong(),
+                    );
+                    ui.horizontal(|ui| {
+                        if ui.selectable_label(false, "New Difficulty").clicked() {
+                            self.reset_new_difficulty_modal();
+                            new_difficulty_modal.open();
+                        }
+
+                        if ui.selectable_label(false, "Open Difficulty").clicked() {
+                            self.reset_new_difficulty_modal();
+                            new_difficulty_modal.open();
+                        }
+                    });
+                });
+                return;
+            }
         });
     }
 
