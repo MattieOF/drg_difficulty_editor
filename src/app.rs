@@ -1,4 +1,4 @@
-use egui::{Align, Vec2, Visuals};
+use egui::{Align, OpenUrl, Vec2, Visuals};
 use egui_modal::Modal;
 
 /// We derive Deserialize/Serialize so that we can persist app state on shutdown.
@@ -180,6 +180,13 @@ impl eframe::App for DifficultyEditorApp {
                 });
 
                 ui.menu_button("Help", |ui| {
+                    if ui.button("View Source").clicked() {
+                        ui.close_menu();
+                        ui.ctx().open_url(OpenUrl::new_tab(
+                            "https://github.com/MattieOF/drg_difficulty_editor",
+                        ));
+                    }
+
                     if ui.button("About").clicked() {
                         ui.close_menu();
                         about_modal.open();
