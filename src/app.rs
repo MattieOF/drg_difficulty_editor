@@ -1,5 +1,5 @@
-use egui::{Align};
-use egui_modal::{Modal};
+use egui::Align;
+use egui_modal::Modal;
 
 /// We derive Deserialize/Serialize so that we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -12,7 +12,7 @@ pub struct DifficultyEditorApp {
 impl Default for DifficultyEditorApp {
     fn default() -> Self {
         Self {
-            new_difficulty: "New Difficulty".to_owned()
+            new_difficulty: "New Difficulty".to_owned(),
         }
     }
 }
@@ -46,15 +46,17 @@ impl eframe::App for DifficultyEditorApp {
             });
             new_difficulty_modal.buttons(ui, |ui| {
                 // After clicking, the modal is automatically closed
-                if new_difficulty_modal.suggested_button(ui, "Create").clicked() {
+                if new_difficulty_modal
+                    .suggested_button(ui, "Create")
+                    .clicked()
+                {
                     println!("New difficulty: {0}", self.new_difficulty);
                 };
                 new_difficulty_modal.button(ui, "Cancel");
             });
         });
 
-        let about_modal = Modal::new(ctx, "about_modal")
-            .with_close_on_outside_click(true);
+        let about_modal = Modal::new(ctx, "about_modal").with_close_on_outside_click(true);
         about_modal.show(|ui| {
             about_modal.title(ui, "About DRG Difficulty Editor");
             about_modal.frame(ui, |ui| {
@@ -85,10 +87,10 @@ impl eframe::App for DifficultyEditorApp {
                 });
 
                 ui.menu_button("Help", |ui| {
-                   if ui.button("About").clicked() {
-                       ui.close_menu();
-                       about_modal.open();
-                   }
+                    if ui.button("About").clicked() {
+                        ui.close_menu();
+                        about_modal.open();
+                    }
                 });
 
                 ui.add_space(16.0);
