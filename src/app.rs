@@ -79,15 +79,18 @@ impl eframe::App for DifficultyEditorApp {
         options_modal.show(|ui| {
             options_modal.title(ui, "Options");
             options_modal.frame(ui, |ui| {
-                egui::ScrollArea::vertical().auto_shrink(true).max_height(400.0).show(ui, |ui| {
-                    ui.horizontal(|ui| {
-                        ui.label("Theme: ");
-                        let mut visuals = ui.ctx().style().visuals.clone();
-                        visuals.light_dark_radio_buttons(ui);
-                        self.dark_mode_enabled = visuals.dark_mode;
-                        ui.ctx().set_visuals(visuals);
+                egui::ScrollArea::vertical()
+                    .auto_shrink(true)
+                    .max_height(400.0)
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.label("Theme: ");
+                            let mut visuals = ui.ctx().style().visuals.clone();
+                            visuals.light_dark_radio_buttons(ui);
+                            self.dark_mode_enabled = visuals.dark_mode;
+                            ui.ctx().set_visuals(visuals);
+                        });
                     });
-                });
             });
             options_modal.buttons(ui, |ui| {
                 options_modal.button(ui, "Close");
