@@ -1,4 +1,4 @@
-use egui::{Align, Visuals};
+use egui::{Align, Vec2, Visuals};
 use egui_modal::Modal;
 
 /// We derive Deserialize/Serialize so that we can persist app state on shutdown.
@@ -6,7 +6,9 @@ use egui_modal::Modal;
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct DifficultyEditorApp {
     #[serde(skip)]
-    new_difficulty: String,
+    new_difficulty_name: String,
+    #[serde(skip)]
+    new_difficulty_base: String,
     #[serde(skip)]
     dark_mode_enabled: bool,
 }
@@ -14,7 +16,8 @@ pub struct DifficultyEditorApp {
 impl Default for DifficultyEditorApp {
     fn default() -> Self {
         Self {
-            new_difficulty: "New Difficulty".to_owned(),
+            new_difficulty_name: "New Difficulty".to_owned(),
+            new_difficulty_base: "Haz5".to_owned(),
             dark_mode_enabled: true,
         }
     }
@@ -50,7 +53,44 @@ impl eframe::App for DifficultyEditorApp {
         new_difficulty_modal.show(|ui| {
             new_difficulty_modal.title(ui, "Create New Difficulty");
             new_difficulty_modal.frame(ui, |ui| {
-                ui.text_edit_singleline(&mut self.new_difficulty);
+                egui::Grid::new("new_diff_grid")
+                    .num_columns(2)
+                    .spacing(Vec2::new(10.0, 6.0))
+                    .show(ui, |ui| {
+                        ui.label("Name:");
+                        ui.text_edit_singleline(&mut self.new_difficulty_name);
+                        ui.end_row();
+                        ui.label("Base:");
+                        egui::ComboBox::from_id_source("new_diff_base_selection")
+                            .selected_text(format!("{:?}", self.new_difficulty_base))
+                            .show_ui(ui, |ui| {
+                                ui.selectable_value(
+                                    &mut self.new_difficulty_base,
+                                    "Haz1".to_owned(),
+                                    "Hazard 1",
+                                );
+                                ui.selectable_value(
+                                    &mut self.new_difficulty_base,
+                                    "Haz2".to_owned(),
+                                    "Hazard 2",
+                                );
+                                ui.selectable_value(
+                                    &mut self.new_difficulty_base,
+                                    "Haz3".to_owned(),
+                                    "Hazard 3",
+                                );
+                                ui.selectable_value(
+                                    &mut self.new_difficulty_base,
+                                    "Haz4".to_owned(),
+                                    "Hazard 4",
+                                );
+                                ui.selectable_value(
+                                    &mut self.new_difficulty_base,
+                                    "Haz5".to_owned(),
+                                    "Hazard 5",
+                                );
+                            });
+                    });
             });
             new_difficulty_modal.buttons(ui, |ui| {
                 // After clicking, the modal is automatically closed
@@ -58,7 +98,10 @@ impl eframe::App for DifficultyEditorApp {
                     .suggested_button(ui, "Create")
                     .clicked()
                 {
-                    println!("New difficulty: {0}", self.new_difficulty);
+                    println!(
+                        "New difficulty: {0}, with {1} as base",
+                        self.new_difficulty_name, self.new_difficulty_base
+                    );
                 };
                 new_difficulty_modal.button(ui, "Cancel");
             });
@@ -103,6 +146,7 @@ impl eframe::App for DifficultyEditorApp {
                 ui.menu_button("File", |ui| {
                     if ui.button("New Difficulty").clicked() {
                         ui.close_menu();
+                        self.new_difficulty_name = "New Difficulty".to_owned();
                         new_difficulty_modal.open();
                     }
 
