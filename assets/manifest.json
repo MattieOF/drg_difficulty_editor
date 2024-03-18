@@ -1,6 +1,6 @@
 {
-  "name": "egui Template PWA",
-  "short_name": "egui-template-pwa",
+  "name": "DRG Difficulty Editor PWA",
+  "short_name": "drg_difficulty_editor",
   "icons": [
     {
       "src": "./icon-256.png",
