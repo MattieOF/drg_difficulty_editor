@@ -1,5 +1,7 @@
+use crate::difficulty::Difficulty;
 use egui::{Align, OpenUrl, Vec2, Visuals};
 use egui_modal::Modal;
+use linked_hash_map::LinkedHashMap;
 
 /// We derive Deserialize/Serialize so that we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -13,6 +15,9 @@ pub struct DifficultyEditorApp {
     dark_mode_enabled: bool,
     #[serde(skip)]
     project_open: bool,
+
+    #[serde(skip)]
+    base_difficulties: LinkedHashMap<String, Difficulty>,
 }
 
 impl Default for DifficultyEditorApp {
@@ -22,6 +27,7 @@ impl Default for DifficultyEditorApp {
             new_difficulty_base: "Haz5".to_owned(),
             dark_mode_enabled: true,
             project_open: false,
+            base_difficulties: Self::load_base_difficulties(),
         }
     }
 }
@@ -47,6 +53,16 @@ impl DifficultyEditorApp {
     fn reset_new_difficulty_modal(&mut self) {
         self.new_difficulty_name = "New Difficulty".to_owned();
     }
+
+    fn load_base_difficulties() -> LinkedHashMap<String, Difficulty> {
+        let mut map = LinkedHashMap::default();
+        map.insert("Hazard 1".to_string(), Difficulty::from_name("Hazard 1"));
+        map.insert("Hazard 2".to_string(), Difficulty::from_name("Hazard 2"));
+        map.insert("Hazard 3".to_string(), Difficulty::from_name("Hazard 3"));
+        map.insert("Hazard 4".to_string(), Difficulty::from_name("Hazard 4"));
+        map.insert("Hazard 5".to_string(), Difficulty::from_name("Hazard 5"));
+        map
+    }
 }
 
 impl eframe::App for DifficultyEditorApp {
@@ -69,33 +85,20 @@ impl eframe::App for DifficultyEditorApp {
                         ui.end_row();
                         ui.label("Base:");
                         egui::ComboBox::from_id_source("new_diff_base_selection")
-                            .selected_text(format!("{:?}", self.new_difficulty_base))
+                            .selected_text(
+                                match self.base_difficulties.get(&self.new_difficulty_base) {
+                                    None => "Select a difficulty".to_string(),
+                                    Some(difficulty) => difficulty.name.to_owned(),
+                                },
+                            )
                             .show_ui(ui, |ui| {
-                                ui.selectable_value(
-                                    &mut self.new_difficulty_base,
-                                    "Haz1".to_owned(),
-                                    "Hazard 1",
-                                );
-                                ui.selectable_value(
-                                    &mut self.new_difficulty_base,
-                                    "Haz2".to_owned(),
-                                    "Hazard 2",
-                                );
-                                ui.selectable_value(
-                                    &mut self.new_difficulty_base,
-                                    "Haz3".to_owned(),
-                                    "Hazard 3",
-                                );
-                                ui.selectable_value(
-                                    &mut self.new_difficulty_base,
-                                    "Haz4".to_owned(),
-                                    "Hazard 4",
-                                );
-                                ui.selectable_value(
-                                    &mut self.new_difficulty_base,
-                                    "Haz5".to_owned(),
-                                    "Hazard 5",
-                                );
+                                for (key, difficulty) in &self.base_difficulties {
+                                    ui.selectable_value(
+                                        &mut self.new_difficulty_base,
+                                        key.to_string(),
+                                        difficulty.name.to_owned(),
+                                    );
+                                }
                             });
                     });
             });
@@ -210,7 +213,7 @@ impl eframe::App for DifficultyEditorApp {
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            if (!self.project_open) {
+            if !self.project_open {
                 ui.vertical_centered(|ui| {
                     ui.add_space(ui.available_height() * 0.45);
                     ui.label(
@@ -218,16 +221,31 @@ impl eframe::App for DifficultyEditorApp {
                             .size(40.0)
                             .strong(),
                     );
+                    ui.add_space(20.0);
                     ui.horizontal(|ui| {
-                        if ui.selectable_label(false, "New Difficulty").clicked() {
-                            self.reset_new_difficulty_modal();
-                            new_difficulty_modal.open();
-                        }
+                        centerer(ui, |ui| {
+                            if ui
+                                .selectable_label(
+                                    false,
+                                    egui::RichText::new("New Difficulty").size(15.0),
+                                )
+                                .clicked()
+                            {
+                                self.reset_new_difficulty_modal();
+                                new_difficulty_modal.open();
+                            }
 
-                        if ui.selectable_label(false, "Open Difficulty").clicked() {
-                            self.reset_new_difficulty_modal();
-                            new_difficulty_modal.open();
-                        }
+                            if ui
+                                .selectable_label(
+                                    false,
+                                    egui::RichText::new("Open Difficulty").size(15.0),
+                                )
+                                .clicked()
+                            {
+                                self.reset_new_difficulty_modal();
+                                new_difficulty_modal.open();
+                            }
+                        });
                     });
                 });
                 return;
@@ -259,5 +277,32 @@ fn software_credits(ui: &mut egui::Ui) {
         ui.label("Also uses ");
         ui.hyperlink_to("egui-modal", "https://github.com/n00kii/egui-modal");
         ui.label(".");
+    });
+}
+
+// Massive thanks to Juan Campa (juancampa) for this function.
+// Helper function to center arbitrary widgets. It works by measuring the width of the widgets after rendering, and
+// then using that offset on the next frame.
+fn centerer(ui: &mut egui::Ui, add_contents: impl FnOnce(&mut egui::Ui)) {
+    ui.horizontal(|ui| {
+        let id = ui.id().with("_centerer");
+        let last_width: Option<f32> = ui.memory_mut(|mem| mem.data.get_temp(id));
+        if let Some(last_width) = last_width {
+            ui.add_space((ui.available_width() - last_width) / 2.0);
+        }
+        let res = ui
+            .scope(|ui| {
+                add_contents(ui);
+            })
+            .response;
+        let width = res.rect.width();
+        ui.memory_mut(|mem| mem.data.insert_temp(id, width));
+
+        // Repaint if width changed
+        match last_width {
+            None => ui.ctx().request_repaint(),
+            Some(last_width) if last_width != width => ui.ctx().request_repaint(),
+            Some(_) => {}
+        }
     });
 }
