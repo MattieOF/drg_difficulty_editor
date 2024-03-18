@@ -110,6 +110,20 @@ impl eframe::App for DifficultyEditorApp {
         let about_modal = Modal::new(ctx, "about_modal").with_close_on_outside_click(true);
         about_modal.show(|ui| {
             about_modal.title(ui, "About DRG Difficulty Editor");
+            ui.label("A tool to create custom DRG difficulties.");
+            ui.horizontal(|ui| {
+                ui.spacing_mut().item_spacing.x = 0.0;
+                ui.label("Created by ");
+                ui.hyperlink_to("Matt Ware", "https://www.mattware.dev/");
+                ui.label(". (");
+                ui.hyperlink_to(
+                    "mattbware3@gmail.com",
+                    "mailto:mattbware3@gmail.com?body=Hello!",
+                );
+                ui.label(")");
+            });
+            ui.add_space(20.0);
+            ui.label(egui::RichText::new("Software Credits").size(15.0));
             about_modal.frame(ui, |ui| {
                 software_credits(ui);
             });
